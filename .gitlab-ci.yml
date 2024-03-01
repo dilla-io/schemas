@@ -1,0 +1,61 @@
+variables:
+  NAME: 'schemas'
+  VERSION: '1.0'
+
+stages:
+  - build
+  - package
+
+# Build a Docker image with CI/CD and push to the GitLab registry.
+# Docker-in-Docker documentation: https://docs.gitlab.com/ee/ci/docker/using_docker_build.html
+docker:
+  # Use the official docker image.
+  image: docker:latest
+  stage: build
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  # Default branch leaves tag empty (= latest tag)
+  # All other branches are tagged with the escaped branch name (commit ref slug)
+  script:
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        tag=""
+        echo "Running on default branch '$CI_DEFAULT_BRANCH': tag = 'latest'"
+      else
+        tag=":$CI_COMMIT_REF_SLUG"
+        echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
+      fi
+    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
+    - docker push "$CI_REGISTRY_IMAGE${tag}"
+  # Run this job in a branch where a Dockerfile exists
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - Dockerfile
+        - validator.py
+        - "*.schema.json"
+
+# https://docs.gitlab.com/ee/user/packages/generic_packages/
+# https://gitlab.com/guided-explorations/cfg-data/write-ci-cd-variables-in-pipeline
+package:
+  image: bash:latest
+  stage: package
+  before_script:
+    - apk add curl
+  script:
+    - |
+      echo "${VERSION}" > version.txt
+      echo "${VERSION}" > version-${VERSION}.txt
+      echo "VERSION=${VERSION}" > version.env
+      tar -czf ${NAME}-${VERSION}.tar.gz *.schema.json
+      curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ${NAME}-${VERSION}.tar.gz ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${NAME}/${VERSION}/${NAME}.${VERSION}.tar.gz
+  artifacts:
+    reports:
+      # Propagates variables into the pipeline level, but never stores the actual file
+      dotenv: version.env
+  rules:
+    - if: $CI_COMMIT_BRANCH
+      changes:
+        - "*.schema.json"

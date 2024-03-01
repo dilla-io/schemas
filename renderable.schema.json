@@ -1,0 +1,543 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "component_renderable": {
+      "title": "Component",
+      "description": "Reusable, repeatable and nestable building blocks of the design system. Each component meets a specific UI need. Thet are rendered by the template engine.",
+      "type": "object",
+      "required": ["@component"],
+      "additionalProperties": false,
+      "properties": {
+        "@component": {
+          "type": "string",
+          "title": "Component",
+          "description": "Required. The component ID as described in the design system. If the value is empty or not defined in the design system, the full object will be ignored and its children will not be rendered."
+        },
+        "@variant": {
+          "type": "string",
+          "title": "Variant",
+          "description": "A variant ID as described in the component definition.  If the value is not defined in the components definitions, it will be ignored and the component will be processed normally."
+        },
+        "@attributes": {
+          "title": "Attributes",
+          "description": "An attributes mapping with a special behaviour: always avaialble to the component template, even if missing from payload.",
+          "$ref": "#/$defs/attributes_value"
+        },
+        "@styles": {
+          "description": "Styles property",
+          "$ref": "#/$defs/styles_property"
+        },
+        "@theme": {
+          "description": "Theme property",
+          "$ref": "#/$defs/theme_property"
+        },
+        "@local_variables": {
+          "description": "Local variables property",
+          "$ref": "#/$defs/local_variables_property"
+        },
+        "@library": {
+          "description": "Library property",
+          "$ref": "#/$defs/library_property"
+        },
+        "@attached": {
+          "description": "Attached property",
+          "$ref": "#/$defs/attached_property"
+        },
+        "@variables": {
+          "description": "Variables property",
+          "$ref": "#/$defs/variables_property"
+        },
+        "@trans": {
+          "description": "Translations property",
+          "$ref": "#/$defs/trans_property"
+        }
+      },
+      "patternProperties": {
+        "^(?!@).*$": {
+          "title": "Slots and props",
+          "description": "They will be injected into the rendering engine as template context.",
+          "anyOf": [
+            { "$ref": "#/$defs/slot_value" },
+            { "$ref": "#/$defs/prop_value" }
+          ]
+        }
+      },
+      "examples": [
+        {
+          "@component": "card",
+          "@variant": "horizontal",
+          "header": "Card title",
+          "content": [
+            {
+              "@element": "p",
+              "@content": "Welcome!"
+            },
+            {
+              "@component": "button",
+              "label": "Discover",
+              "url": "/foo/bar"
+            },
+            {
+              "@component": "button",
+              "@variant": "warning",
+              "label": "Unsubscribe",
+              "url": "/bar/foo"
+            }
+          ]
+        }
+      ]
+    },
+    "slot_value": {
+      "title": "Slot value (any renderable)",
+      "description": "The payload root, the component slots, some templates variables, and the <code>@content</code> property can host any renderable value.",
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "A string is the simplest renderable"
+        },
+        {
+          "type": "array",
+          "description": "A list of renderables is also a renderable. Each rendered item is concatenated with a whitespace as separator.",
+          "items": { "$ref": "#/$defs/slot_value" }
+        },
+        {
+          "$ref": "#/$defs/empty_renderable",
+
+          "description": "Empty renderable"
+        },
+        {
+          "description": "Element renderable",
+          "if": {
+            "type": "object",
+            "required": ["@element"]
+          },
+          "then": {
+            "$ref": "#/$defs/element_renderable"
+          },
+          "else": false
+        },
+        {
+          "description": "Template renderable",
+          "if": {
+            "type": "object",
+            "required": ["@template"]
+          },
+          "then": {
+            "$ref": "#/$defs/template_renderable"
+          },
+          "else": false
+        },
+        {
+          "description": "Component renderable",
+          "if": {
+            "type": "object",
+            "required": ["@component"]
+          },
+          "then": {
+            "$ref": "#/$defs/component_renderable"
+          },
+          "else": false
+        }
+      ],
+      "examples": [
+        [
+          "Hello",
+          {
+            "@element": "strong",
+            "@content": "beautiful"
+          },
+          "world"
+        ]
+      ]
+    },
+    "prop_value": {
+      "title": "Prop value",
+      "description": "Non renderable, strictly typed, values.",
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Any scalar is a legitimate prop value."
+        },
+        {
+          "type": "boolean",
+          "description": "Any scalar is a legitimate prop value."
+        },
+        {
+          "type": "number",
+          "description": "Any scalar is a legitimate prop value."
+        },
+        {
+          "description": "Pairs of attribute key and attribute value.",
+          "$ref": "#/$defs/attributes_value"
+        },
+        {
+          "type": "array",
+          "title": "List",
+          "description": "Props can be a nestable list of value if there are no renderable inside.",
+          "items": {
+            "$ref": "#/$defs/prop_value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "title": "Mapping",
+          "description": "Props can be a nestable key/value mapping if there are no renderable inside. Useful for menu structures.",
+          "patternProperties": {
+            "^(?!@).*$": {
+              "$ref": "#/$defs/prop_value"
+            }
+          }
+        }
+      ]
+    },
+    "element_renderable": {
+      "title": "Element",
+      "description": "The basic building blocks, which does not use the template engine, making it light and faster to render than a component. They are low level and not part of the design system.",
+      "type": "object",
+      "required": ["@element"],
+      "additionalProperties": false,
+      "properties": {
+        "@element": {
+          "type": "string",
+          "title": "Element name",
+          "description": "Required. Any value will be processed, even if not existing in the target markup language. If the value is empty, the full object will be ignored and its children will not be rendered."
+        },
+        "@content": {
+          "title": "Content",
+          "description": "Any renderable.",
+          "$ref": "#/$defs/slot_value"
+        },
+        "@styles": {
+          "description": "Styles property",
+          "$ref": "#/$defs/styles_property"
+        },
+        "@theme": {
+          "description": "Theme property",
+          "$ref": "#/$defs/theme_property"
+        },
+        "@local_variables": {
+          "description": "Local variables property",
+
+          "$ref": "#/$defs/local_variables_property"
+        },
+        "@library": {
+          "description": "Library property",
+          "$ref": "#/$defs/library_property"
+        },
+        "@attached": {
+          "description": "Attached property",
+          "$ref": "#/$defs/attached_property"
+        },
+        "@variables": {
+          "description": "Variables property",
+
+          "$ref": "#/$defs/variables_property"
+        },
+        "@trans": {
+          "description": "Translations property",
+          "$ref": "#/$defs/trans_property"
+        }
+      },
+      "patternProperties": {
+        "^(?!@).*$": {
+          "title": "Attributes",
+          "description": "Markup (HTML/SVG/XML...) attributes",
+          "$ref": "#/$defs/attribute_value"
+        }
+      },
+      "examples": [
+        {
+          "@element": "h1",
+          "id": "intro",
+          "class": ["warm", "quote"],
+          "@content": [
+            "My tailor is ",
+            {
+              "@element": "a",
+              "href": "http://example.org",
+              "@content": "rich"
+            }
+          ]
+        }
+      ]
+    },
+    "attribute_value": {
+      "title": "Attribute value",
+      "description": "A single attribute value. They are rendered as <code>key=\"value\"</code>.",
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "The plain, usually expected, type for an attribute value."
+        },
+        {
+          "type": "number",
+          "description": "Needed by some templates expressions which are manipulating numerical values. Casted into a string before rendering."
+        },
+        {
+          "type": "array",
+          "description": "Array of strings and numbers. Concatenated before rendering, with single space character as separator",
+          "items": {
+            "anyOf": [{ "type": "number" }, { "type": "string" }]
+          }
+        }
+      ]
+    },
+    "attributes_value": {
+      "title": "Attributes value",
+      "description": "Pairs of attribute key and attribute value.",
+      "patternProperties": {
+        "\\S+": {
+          "description": "A single attribute value.",
+          "$ref": "#/$defs/attribute_value"
+        }
+      }
+    },
+    "attachable_element_renderable": {
+      "title": "Attachable element",
+      "description": "More strict than a regular element: any reserved property outside of <code>@element</code> and <code>@content</code> will be ignored. Used in the <code>@attached</code> property.",
+      "type": "object",
+      "required": ["@element"],
+      "additionalProperties": false,
+      "properties": {
+        "@element": {
+          "type": "string",
+          "title": "Element name",
+          "description": "Required. Any value will be processed, even if not existing in the target markup language. If the value is empty, the full object will be ignored and its children will not be rendered."
+        },
+        "@content": {
+          "type": "string",
+          "title": "Content",
+          "description": "Only strings to prevent nested attachment."
+        }
+      },
+      "patternProperties": {
+        "^(?!@).*$": {
+          "title": "Attributes",
+          "description": "Markup (HTML/SVG/XML...) attributes",
+          "$ref": "#/$defs/attribute_value"
+        }
+      },
+      "examples": [
+        {
+          "@element": "link",
+          "rel": "next",
+          "href": "http://example.org/123"
+        },
+        {
+          "@element": "meta",
+          "name": "keywords",
+          "content": "foo, bar"
+        }
+      ]
+    },
+    "template_renderable": {
+      "title": "Template",
+      "description": "A jinja-like template.  Can host bubbable properties, but no scoped properties.",
+      "type": "object",
+      "required": ["@template"],
+      "additionalProperties": false,
+      "properties": {
+        "@template": {
+          "type": "string",
+          "title": "Inline template",
+          "description": "Required. A jinja-like template."
+        },
+        "@library": {
+          "description": "Library property",
+          "$ref": "#/$defs/library_property"
+        },
+        "@attached": {
+          "description": "Attached property",
+          "$ref": "#/$defs/attached_property"
+        },
+        "@variables": {
+          "description": "Variables property",
+          "$ref": "#/$defs/variables_property"
+        },
+        "@trans": {
+          "description": "Translations property",
+          "$ref": "#/$defs/trans_property"
+        }
+      },
+      "patternProperties": {
+        "^(?!@).*$": {
+          "title": "Template context",
+          "description": "Variables which will be injected into the rendering engine as template context.",
+          "anyOf": [
+            { "$ref": "#/$defs/slot_value" },
+            { "$ref": "#/$defs/prop_value" }
+          ]
+        }
+      },
+      "examples": [
+        {
+          "@template": "<span class=\"foo\">{{ bar }}</span>",
+          "bar": "Hello"
+        }
+      ]
+    },
+    "empty_renderable": {
+      "title": "Empty renderable",
+      "description": "Can only host bubbable properties.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "@library": {
+          "description": "Library property",
+          "$ref": "#/$defs/library_property"
+        },
+        "@attached": {
+          "description": "Attached property",
+          "$ref": "#/$defs/attached_property"
+        },
+        "@variables": {
+          "description": "Variables property",
+          "$ref": "#/$defs/variables_property"
+        },
+        "@trans": {
+          "description": "Translations property",
+          "$ref": "#/$defs/trans_property"
+        }
+      }
+    },
+    "styles_property": {
+      "title": "Styles",
+      "description": "Scoped. A list of values which can be used additively to style an element from scratch or to override a the look of a component. Each value is a style option, a simple HTML classes typically scoped to a single CSS property. Mutually exclusive options are defined as \"styles\" in the deisgn system.",
+      "type": "array",
+      "items": { "type": "string" },
+      "examples": [{ "@styles": ["mt-1", "text-truncate"] }]
+    },
+    "theme_property": {
+      "title": "Theme",
+      "description": "Scoped. A theme is also expected to alter the display of the nested content, until a new <code>@theme</code> is found. Careful, some design systems are applying the theme to the global display anyway.",
+      "type": "string",
+      "examples": [{ "@theme": "dark" }]
+    },
+    "local_variables_property": {
+      "title": "Local variables",
+      "description": "Scoped. The CSS variables to dynamically override, as defined in the design system. Added as a style attribute on the renderable root tag. Keys not defined in the design system will be ignored. Double dash prefix (--) can be ignored in the request.",
+      "type": "object",
+      "examples": [
+        {
+          "@local_variables": {
+            "secondary": "@feeae6cc"
+          }
+        }
+      ]
+    },
+    "attached_property": {
+      "title": "Attached",
+      "description": "Bubbable. An array of attachable <code>@element</code>.",
+      "type": "array",
+      "items": { "$ref": "#/$defs/attachable_element_renderable" },
+      "examples": [
+        {
+          "@attached": [
+            {
+              "@element": "link",
+              "href": "?page=2",
+              "rel": "next"
+            },
+            {
+              "@element": "title",
+              "@content": "My title"
+            }
+          ]
+        }
+      ]
+    },
+    "library_property": {
+      "title": "Asset library",
+      "description": "Bubbable. A library of CSS and JS assets, folloiwng the design systems library definition. Generates link and/or style element in the HTML head, and script element at the bottom of the HTML body. More powerful than using directly <code>@attached</code> because of advanced processing like dependecies mangament.",
+      "type": "object",
+      "properties": {
+        "css": {
+          "type": "object",
+          "patternProperties": {
+            "^S_": {
+              "type": "object"
+            }
+          },
+          "description": "Keys are URL. Values are HTML attributes which will be added to the attached element."
+        },
+        "js": {
+          "type": "object",
+          "patternProperties": {
+            "^S_": {
+              "type": "object"
+            }
+          },
+          "description": "Key are URL. Values are HTML attributes which will be added to the attached element."
+        },
+        "dependencies": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "A list of libraries ID which will be attchced before the current library."
+        }
+      },
+      "examples": [
+        {
+          "@library": {
+            "css": {
+              "slider.min.css": {
+                "minified": "true",
+                "media": "screen"
+              }
+            },
+            "js": {
+              "slider.js": {
+                "defer": "true"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "trans_property": {
+      "title": "Translations",
+      "description": "Bubbable. A mapping of translation for template's translatable text.",
+      "type": "object",
+      "patternProperties": {
+        ".+": {
+          "description": "Every key is a translatable value, according to the template. Every value is the current translation.",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "@trans": {
+            "My tailor is rich": "Mon tailleur est riche",
+            "Is this your handbag?": "Est-ce votre sac à main ?"
+          }
+        }
+      ]
+    },
+    "variables_property": {
+      "title": "Variables",
+      "description": "Bubbable.  A list of attachable elements. The CSS variables to dynamically override, as defined in the design system. Generate a &lt;style> tag with all the collected CSS custom properties and their overriden values for the header.",
+      "type": "object",
+      "patternProperties": {
+        "\\S+": {
+          "title": "Scopes",
+          "description": "Every scope is an object with variables as keys. Keys not defined in the design system will be ignored. Values equal to default will be ignored.",
+          "$ref": "#/$defs/local_variables_property"
+        }
+      },
+      "examples": [
+        {
+          "@variables": {
+            ":root": {
+              "primary": "red",
+              "secondary": "#feeae6cc"
+            },
+            ".sidebar": {
+              "secondary": "yellow"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "anyOf": [{ "$ref": "#/$defs/slot_value" }]
+}

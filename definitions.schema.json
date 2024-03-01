@@ -1,0 +1,798 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "id": {
+      "title": "Identifier",
+      "description": "Machine name, unique and persistent. Only ASCII letters, digits, '_', and '-' should be used, and should start with a letter.",
+      "type": "string",
+      "pattern": "^[A-Za-z]+[\\w\\-]*$"
+    },
+    "uri": {
+      "title": "URI ",
+      "description": "Absolute or relative URI.",
+      "type": "string",
+      "format": "uri-reference"
+    },
+    "design_system": {
+      "title": "Design system",
+      "description": "The top level of the definition hierarchy.",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "license": {
+          "type": "string",
+          "title": "License",
+          "description": "An SDPX identifier or an URL. Used in catalogs and preview. See https://spdx.org/licenses/"
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "extends": {
+          "$ref": "#/$defs/uri",
+          "description": "A design system URL Every components, styles, themes, variables, examples and libraries from this parent design system will be duplicated in the current design system, if their ID are not overriden."
+        },
+        "dateModified": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date on which the design system was most recently modified, according to upstream."
+        },
+        "version": {
+          "type": "string",
+          "description": "The current version of the design system according to upstream. Can be a git ref, a date, a tag... A major upstream version will generate a new Dilla design system."
+        },
+        "components": {
+          "description": "A collection of components definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/component" }
+          }
+        },
+        "styles": {
+          "description": "A collection of styles definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/style" }
+          }
+        },
+        "themes": {
+          "description": "A collection of themes definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/theme" }
+          }
+        },
+        "variables": {
+          "description": "A collection of variables definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/variable" }
+          }
+        },
+        "examples": {
+          "description": "A collection of examples definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/example" }
+          }
+        },
+        "libraries": {
+          "description": "A collection of assets libraries definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/library" }
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "swing_1",
+          "label": "Dilla Swing",
+          "status": "wip",
+          "description": "The design of dilla.io, based on Bootstrap 5.",
+          "group": "internal",
+          "extends": "bootstrap:5",
+          "components": {
+            "list": {},
+            "preview": {}
+          }
+        }
+      ]
+    },
+    "component": {
+      "title": "Component",
+      "description": "Reusable, repeatable and nestable building blocks of the design system. Each component meets a specific UI need. The are rendered by the engine attached to the design system.",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "license": {
+          "type": "string",
+          "title": "License",
+          "description": "An SDPX identifier or an URL. Used in catalogs and preview. See https://spdx.org/licenses/"
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "variants": {
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/variant" }
+          },
+          "description": "A collection of component variants definitions, keyed by ID. It is not allowed to have only one variant."
+        },
+        "slots": {
+          "description": "A collection of component slots definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/slot" }
+          }
+        },
+        "props": {
+          "description": "A collection of component props definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/prop" }
+          }
+        },
+        "examples": {
+          "description": "A collection of examples definitions, keyed by ID.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/example" }
+          }
+        },
+        "library": {
+          "description": "A single assets library definition, which will be loaded if the component is called in a render request.",
+          "$ref": "#/$defs/library"
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "button",
+          "label": "Button",
+          "group": "Interaction",
+          "slots": {
+            "label": {
+              "id": "label",
+              "label": "Label"
+            }
+          },
+          "props": {
+            "url": {
+              "id": "url",
+              "label": "URL",
+              "$ref": "#/$defs/uri"
+            }
+          },
+          "variants": {
+            "default": {
+              "id": "default",
+              "label": "Default"
+            },
+            "primary": { "id": "primary", "label": "Primary" }
+          }
+        }
+      ]
+    },
+    "variant": {
+      "title": "Component variant",
+      "description": "Different visual versions of the component",
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "_template": {
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "id": "flush",
+          "label": "Flush",
+          "description": "Remove the default background color"
+        }
+      ]
+    },
+    "slot": {
+      "title": "Component slot",
+      "description": "Non typed. Can host any renderable value",
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        }
+      },
+      "examples": [
+        {
+          "id": "navigation",
+          "label": "Navigation",
+          "description": "Navigation elements (brand, text, etc.)."
+        }
+      ]
+    },
+    "prop": {
+      "title": "Component prop",
+      "description": "Typed value. Can be used for calculation inside the template. Can be printed.",
+      "type": "object",
+      "required": ["id"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "schema": {
+          "type": "object",
+          "description": "A JSON schema object to describe the prop data type. May be used for payload validation."
+        }
+      },
+      "examples": [
+        {
+          "id": "with_container",
+          "label": "With container?",
+          "description": "Containers provide a means to center and horizontally pad contents.",
+          "schema": { "type": "boolean" }
+        }
+      ]
+    },
+    "style": {
+      "title": "Style",
+      "description": "A collection of mutually exclusive, self-descriptive, single-purpose CSS classes. Examples: Typography, Borders, Background colors, Spacing.... Also known as helpers, utilities, fundamentals...",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "options": {
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "$ref": "#/$defs/option" }
+          },
+          "description": "A collection of styles options definitions, keyed by ID."
+        },
+        "previewed_with": {
+          "description": "A list of styles ID. Used for previews.",
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "borders_border",
+          "label": "Border",
+          "options": {
+            "border-all": {
+              "id": "border-all",
+              "label": "All"
+            },
+            "border-none": {
+              "id": "border-all",
+              "label": "None"
+            }
+          },
+          "previewedWith": ["p-2", "bg-light"]
+        }
+      ]
+    },
+    "option": {
+      "title": "Style option",
+      "description": "A simple HTML class typically scoped to a single CSS property. Options from the same style are mutually exclusive",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "previewed_with": {
+          "description": "A list of styles ID. Used for previews, after being merged with parent <code>previewed_with</code> property.",
+          "type": "array",
+          "contains": {
+            "type": "string"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "fw-bolder",
+          "label": "Bolder (relative to the parent element)",
+          "previewed_with": ["border", "m-3"]
+        }
+      ]
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "A themeable design system enables organizations to reuse a single design system for multiple products or purposes. Examples: branding, accessibility, modes...",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "target": {
+          "title": "Target",
+          "description": "Bubble the theme (as an HTML class or attribute) to the <code>html</code> or <code>body</code> element. Or add it as an HTML <code>meta</code> element. If empty, the theme is scopable and will not bubble.",
+          "type": "string",
+          "enum": ["html", "body", "meta"]
+        },
+        "key": {
+          "title": "Key",
+          "description": "The HTML attribute name or meta element name attribute. If empty, the vallue will be added to the HTML class attributes.",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "description": "The theme value to add as a class or attribute value, if different from ID.",
+          "type": "string"
+        },
+        "library": {
+          "description": "A single assets library definition, which will be loaded if the theme is called in a render request.",
+          "$ref": "#/$defs/library"
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "Dark",
+          "label": "Dark",
+          "description": "Dsplays dark surfaces across the majority of a UI.",
+          "value": "mzp-t-dark",
+          "key": "data-scheme"
+        }
+      ]
+    },
+    "variable": {
+      "title": "Variable",
+      "description": "Also know as CSS custom property. Allows to override a default CSS value with custom value.",
+      "type": "object",
+      "required": ["id", "default"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "type": {
+          "description": "CSS value type",
+          "type": "string"
+        },
+        "default": {
+          "description": "Default value. Used in rendering to prevent the printing of a defaut value.",
+          "type": "object"
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "bs-body-font-size",
+          "label": "Font size",
+          "group": "Body",
+          "type": "length",
+          "default": { ":root": "1rem" }
+        }
+      ]
+    },
+    "example": {
+      "title": "Example",
+      "description": "Provide example by defining renderable. Examples are useful to show what your design system or your component is capable of.",
+      "type": "object",
+      "required": ["id", "label"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "license": {
+          "type": "string",
+          "title": "License",
+          "description": "An SDPX identifier or an URL. Used in catalogs and preview. See https://spdx.org/licenses/"
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "renderable": {
+          "$ref": "renderable.schema.json",
+          "title": "Renderable",
+          "description": "A Dilla renderable, according to the Render API schema."
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "hello_world",
+          "label": "Hello world",
+          "renderable": [
+            "Hello",
+            {
+              "@element": "strong",
+              "@content": "beautiful"
+            },
+            "world"
+          ]
+        }
+      ]
+    },
+    "library": {
+      "title": "Asset library",
+      "description": "Can contain one or more CSS assets, one or more JS assets. Assets (CSS or JS) are only loaded if needed.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "title": "Identifier",
+          "description": "Machine name, unique and persistent (Universal metadata).",
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "title": "Label",
+          "description": "Human-friendly, preferably short, name (Universal metadata).",
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "title": "Description",
+          "description": "Human-friendly, more lengthy explanation (Universal metadata)."
+        },
+        "status": {
+          "title": "Status",
+          "description": "Its stage in a lifecycle: Incomplete, Draft, Published, Obsolete... No processing is made on this value. (Universal metadata)",
+          "type": "string"
+        },
+        "group": {
+          "type": "string",
+          "title": "Group",
+          "description": "A category. Used in catalogs and preview."
+        },
+        "license": {
+          "type": "string",
+          "title": "License",
+          "description": "An SDPX identifier or an URL. Used in catalogs and preview. See https://spdx.org/licenses/"
+        },
+        "homepage": {
+          "title": "Homepage",
+          "description": "An URL to identify the defined object, or where to find more information or documentation. Used in catalogs and preview.",
+          "$ref": "#/$defs/uri"
+        },
+        "default": {
+          "type": "boolean",
+          "description": "If true: the library is always loaded and attached. If false: attached only if a dependency of an already loaded library."
+        },
+        "css": {
+          "title": "Stylesheets",
+          "description": "Keys are URL. Values are HTML attributes which will be added to the attached element.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "type": "object" }
+          }
+        },
+        "js": {
+          "title": "Scripts",
+          "description": "Keys are URL. Values are HTML attributes which will be added to the attached element.",
+          "type": "object",
+          "propertyName": { "$ref": "#/$defs/id" },
+          "patternProperties": {
+            "^.*$": { "type": "object" }
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          },
+          "description": "A list of libraries ID which will be attached before the current library."
+        },
+        "_provider": {
+          "$ref": "#/$defs/id"
+        },
+        "_discovery": {
+          "type": "array",
+          "contains": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      },
+      "examples": [
+        {
+          "id": "popperjs",
+          "label": "Popper JS",
+          "default": true,
+          "js": {
+            "https://unpkg.com/@popperjs/core@2.11.6/dist/umd/popper.min.js": {}
+          },
+          "license": "MIT",
+          "dependencies": []
+        }
+      ]
+    }
+  },
+  "anyOf": [
+    {
+      "$ref": "#/$defs/design_system"
+    }
+  ]
+}

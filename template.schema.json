@@ -1,0 +1,1139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "type__undefined": {
+      "description": "The type is only known at runtime",
+      "type": "object",
+      "properties": {
+        "@node": { "enum": ["Name", "Getattr", "Getitem"] }
+      }
+    },
+    "type__string": {
+      "anyOf": [
+        { "$ref": "#/$defs/type__undefined" },
+        { "$ref": "#/$defs/constant__string" },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "const": "Concat" }
+          }
+        },
+        {
+          "description": "Flters returning strings.",
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/filter__append" },
+              { "$ref": "#/$defs/filter__capitalize" },
+              { "$ref": "#/$defs/filter__join" },
+              { "$ref": "#/$defs/filter__prepend" },
+              { "$ref": "#/$defs/filter__lower" },
+              { "$ref": "#/$defs/filter__replace" },
+              { "$ref": "#/$defs/filter__reverse" },
+              { "$ref": "#/$defs/filter__t" },
+              { "$ref": "#/$defs/filter__title" },
+              { "$ref": "#/$defs/filter__trim" },
+              { "$ref": "#/$defs/filter__upper" },
+              { "$ref": "#/$defs/filter__first" },
+              { "$ref": "#/$defs/filter__last" },
+              { "$ref": "#/$defs/filter__default" }
+            ]
+          },
+          "else": false
+        },
+        {
+          "if": { "properties": { "@node": { "const": "Call" } } },
+          "then": {
+            "anyOf": [{ "$ref": "#/$defs/function__random" }]
+          },
+          "else": false
+        }
+      ]
+    },
+    "constant__string": {
+      "type": "object",
+      "properties": {
+        "@node": { "const": "Const" },
+        "value": { "type": "string" }
+      }
+    },
+    "type__boolean": {
+      "anyOf": [
+        { "$ref": "#/$defs/type__undefined" },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "const": "Const" },
+            "value": { "type": "boolean" }
+          }
+        },
+        {
+          "description": "Flters returning booleans.",
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/filter__has_attribute" },
+              { "$ref": "#/$defs/filter__has_class" },
+              { "$ref": "#/$defs/filter__first" },
+              { "$ref": "#/$defs/filter__last" }
+            ]
+          },
+          "else": false
+        }
+      ]
+    },
+    "type__number": {
+      "anyOf": [
+        { "$ref": "#/$defs/type__undefined" },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "const": "Const" },
+            "value": { "type": ["number", "integer"] }
+          }
+        },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "enum": ["Div", "FloorDiv", "Mul"] }
+          }
+        },
+        {
+          "description": "Flters returning numbers.",
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/filter__abs" },
+              { "$ref": "#/$defs/filter__length" },
+              { "$ref": "#/$defs/filter__round" },
+              { "$ref": "#/$defs/filter__first" },
+              { "$ref": "#/$defs/filter__last" },
+              { "$ref": "#/$defs/filter__default" }
+            ]
+          },
+          "else": false
+        }
+      ]
+    },
+    "type__sequence": {
+      "anyOf": [
+        { "$ref": "#/$defs/type__undefined" },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "const": "List" }
+          }
+        },
+        {
+          "description": "Flters returning sequences.",
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/filter__map" },
+              { "$ref": "#/$defs/filter__reverse" },
+              { "$ref": "#/$defs/filter__split" },
+              { "$ref": "#/$defs/filter__first" },
+              { "$ref": "#/$defs/filter__last" },
+              { "$ref": "#/$defs/filter__default" }
+            ]
+          },
+          "else": false
+        }
+      ]
+    },
+    "type__mapping": {
+      "anyOf": [
+        { "$ref": "#/$defs/type__undefined" },
+        {
+          "type": "object",
+          "properties": {
+            "@node": { "const": "Dict" }
+          }
+        },
+        {
+          "description": "Flters returning mappings.",
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/filter__add_class" },
+              { "$ref": "#/$defs/filter__remove_attribute" },
+              { "$ref": "#/$defs/filter__remove_class" },
+              { "$ref": "#/$defs/filter__set_attribute" },
+              { "$ref": "#/$defs/filter__first" },
+              { "$ref": "#/$defs/filter__last" },
+              { "$ref": "#/$defs/filter__merge" },
+              { "$ref": "#/$defs/filter__default" }
+            ]
+          },
+          "else": false
+        }
+      ]
+    },
+    "_any_value": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "array",
+          "items": { "$ref": "#/$defs/_any_value" }
+        },
+        {
+          "if": {
+            "type": "object",
+            "required": ["@node"]
+          },
+          "then": {
+            "$ref": "#/$defs/_any_node"
+          },
+          "else": false
+        }
+      ]
+    },
+    "_any_node": {
+      "type": "object",
+      "properties": {
+        "@node": {
+          "type": "string"
+        }
+      },
+      "patternProperties": {
+        "^(?!@).*$": {
+          "anyOf": [{ "$ref": "#/$defs/_any_value" }]
+        }
+      },
+      "anyOf": [
+        {
+          "description": "Skipped nodes",
+          "if": {
+            "properties": {
+              "@node": {
+                "enum": [
+                  "Add",
+                  "And",
+                  "Assign",
+                  "AssignBlock",
+                  "Compare",
+                  "CondExpr",
+                  "Concat",
+                  "Const",
+                  "Dict",
+                  "Div",
+                  "FloorDiv",
+                  "For",
+                  "Getattr",
+                  "Getitem",
+                  "If",
+                  "List",
+                  "Macro",
+                  "Mul",
+                  "Name",
+                  "Not",
+                  "Operand",
+                  "Or",
+                  "Output",
+                  "Pair",
+                  "Slice",
+                  "Sub",
+                  "Template",
+                  "TemplateData",
+                  "Tuple"
+                ]
+              }
+            }
+          },
+          "then": true,
+          "else": false
+        },
+        {
+          "if": { "properties": { "@node": { "const": "Filter" } } },
+          "then": {
+            "anyOf": [
+              { "$ref": "#/$defs/props_filters" },
+              { "$ref": "#/$defs/slots_filters" }
+            ]
+          },
+          "else": false
+        },
+        {
+          "if": { "properties": { "@node": { "const": "Call" } } },
+          "then": { "$ref": "#/$defs/functions" },
+          "else": false
+        },
+        {
+          "if": { "properties": { "@node": { "const": "Test" } } },
+          "then": { "$ref": "#/$defs/tests" },
+          "else": false
+        }
+      ]
+    },
+    "filter__add_class": {
+      "title": "add_class",
+      "description": "Adds classes or merges them on to an array of existing CSS classes. Works for both renderables with attributes and attributes props.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "add_class" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__mapping" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "class_name",
+              "anyOf": [
+                { "$ref": "#/$defs/type__string" },
+                { "$ref": "#/$defs/type__sequence" }
+              ]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["mapping"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__has_attribute": {
+      "title": "has_attribute",
+      "description": "Works for both renderables with attributes and attributes prop.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "has_attribute" },
+        "node": { "$ref": "#/$defs/type__mapping" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "name",
+              "description": "Name of the attribute",
+              "anyOf": [{ "$ref": "#/$defs/constant__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["boolean"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__has_class": {
+      "title": "has_class",
+      "description": "Checks if the class array has the given CSS class. Works for both renderables with attributes and attributes props.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "has_class" },
+        "node": { "$ref": "#/$defs/type__mapping" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "class_name",
+              "description": "Name of the attribute",
+              "anyOf": [{ "$ref": "#/$defs/constant__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["boolean"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__merge": {
+      "title": "merge",
+      "description": "Merges a mapping with another mapping. Useful for attributes.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "merge" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__mapping" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "mapping",
+              "anyOf": [{ "$ref": "#/$defs/type__mapping" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["mapping"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__remove_attribute": {
+      "title": "remove_attribute",
+      "description": "Removes an attribute from a renderable with attributes or an attributes prop.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "remove_attribute" },
+        "node": { "$ref": "#/$defs/type__mapping" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "class_name",
+              "description": "Name of the class",
+              "anyOf": [{ "$ref": "#/$defs/constant__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["mapping"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__remove_class": {
+      "title": "remove_class",
+      "description": "Removes a class from a renderable with attributes or an attributes prop.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "remove_class" },
+        "node": { "$ref": "#/$defs/type__mapping" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "class_name",
+              "description": "Name of the class",
+              "anyOf": [{ "$ref": "#/$defs/constant__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["mapping"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__set_attribute": {
+      "title": "set_attribute",
+      "description": "Sets values for an attribute key in. Works for both renderables with attributes and attributes props.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "set_attribute" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__mapping" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "name",
+              "anyOf": [{ "$ref": "#/$defs/constant__string" }]
+            },
+            {
+              "title": "value(s)",
+              "anyOf": [
+                { "$ref": "#/$defs/type__string" },
+                { "$ref": "#/$defs/type__number" },
+                { "$ref": "#/$defs/type__boolean" },
+                { "$ref": "#/$defs/type__sequence" }
+              ]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["mapping"]
+      },
+      "_provider": "dilla"
+    },
+    "slots_filters": {
+      "title": "Filters for slots",
+      "description": "It is not common to apply filters on slots but some filters are compatible with them.",
+      "type": "object",
+      "properties": {
+        "@node": { "const": "Filter" }
+      },
+      "anyOf": [
+        { "$ref": "#/$defs/filter__add_class" },
+        { "$ref": "#/$defs/filter__has_attribute" },
+        { "$ref": "#/$defs/filter__has_class" },
+        { "$ref": "#/$defs/filter__remove_attribute" },
+        { "$ref": "#/$defs/filter__remove_class" },
+        { "$ref": "#/$defs/filter__set_attribute" }
+      ]
+    },
+    "filter__abs": {
+      "title": "abs",
+      "description": "Returns the absolute value of a number.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "abs" },
+        "node": { "$ref": "#/$defs/type__number" }
+      },
+      "_return": {
+        "types": ["number"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__append": {
+      "title": "append",
+      "description": "Add an string to the end of the string. Useful with <code>map</code> filter.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "append" },
+        "node": { "$ref": "#/$defs/type__string" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "append",
+              "description": "The string to append.",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__batch": {
+      "title": "batch",
+      "description": "Batch items. This filter works pretty much like slice just the other way round. It returns a list of lists with the given number of items. If you provide a second parameter this is used to fill up missing items.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "batch" },
+        "node": {
+          "type": "object"
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "count",
+              "description": "...",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            },
+            {
+              "title": "fill_with",
+              "description": "Fill up missing items.",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__capitalize": {
+      "title": "capitalize",
+      "description": "Convert the string with all its characters lowercased apart from the first char which is uppercased.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "capitalize" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__clean_id": {
+      "title": "clean_id",
+      "description": "Prepares a string for use as a valid HTML ID.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "clean_id" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__default": {
+      "title": "default",
+      "description": "If the value is undefined it will return the passed default value, otherwise the value of the variable.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "default" },
+        "node": {
+          "anyOf": [
+            { "$ref": "#/$defs/type__string" },
+            { "$ref": "#/$defs/type__number" },
+            { "$ref": "#/$defs/type__sequence" },
+            { "$ref": "#/$defs/type__mapping" }
+          ]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "default",
+              "description": "...",
+              "anyOf": [
+                { "$ref": "#/$defs/type__string" },
+                { "$ref": "#/$defs/type__number" },
+                { "$ref": "#/$defs/type__sequence" },
+                { "$ref": "#/$defs/type__mapping" }
+              ]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string", "number", "sequence", "mapping"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__escape": {
+      "title": "escape",
+      "description": "Escapes a string. By default to HTML.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "escape" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__first": {
+      "title": "first",
+      "description": "Returns the first item from a list.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "first" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__sequence" }]
+        }
+      },
+      "_return": {
+        "types": ["string", "boolean", "number", "sequence", "mapping"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__items": {
+      "title": "items",
+      "description": "Returns a list of pairs (items) from a mapping.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "items" },
+        "node": { "$ref": "#/$defs/type__mapping" }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__join": {
+      "title": "join",
+      "description": "Joins a sequence by a character",
+      "type": "object",
+      "properties": {
+        "name": { "const": "join" },
+        "node": { "$ref": "#/$defs/type__sequence" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "joiner",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__last": {
+      "title": "last",
+      "description": "Returns the last item from a list.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "last" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__sequence" }]
+        }
+      },
+      "_return": {
+        "types": ["string", "boolean", "number", "sequence", "mapping"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__length": {
+      "title": "length",
+      "description": "Returns the length of the value.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "length" },
+        "node": {
+          "anyOf": [
+            { "$ref": "#/$defs/type__string" },
+            { "$ref": "#/$defs/type__mapping" },
+            { "$ref": "#/$defs/type__sequence" }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["number"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__lower": {
+      "title": "lower",
+      "description": "Convert a value to lowercase.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "lower" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__map": {
+      "title": "map",
+      "description": "Applies a filter on a sequence of mapping. Jinja also use this filter to look up a naming attribute, but it is not used in Dilla.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "map" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__sequence" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "filter",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__prepend": {
+      "title": "prepend",
+      "description": "Add an string to the beginning of the string. Useful with <code>map</code> filter",
+      "type": "object",
+      "properties": {
+        "name": { "const": "append" },
+        "node": { "$ref": "#/$defs/type__string" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "prepend",
+              "description": "The string to prepend.",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__replace": {
+      "title": "replace",
+      "description": "Return a copy of the value with all occurrences of a substring replaced with a new one. The first argument is the substring that should be replaced, the second is the replacement string.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "replace" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__string" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "from",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            },
+            {
+              "title": "to",
+              "description": "Fill missing values on the last iteration.",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__reverse": {
+      "title": "reverse",
+      "description": "Reverses a list or string",
+      "type": "object",
+      "properties": {
+        "name": { "const": "reverse" },
+        "node": {
+          "anyOf": [
+            { "$ref": "#/$defs/type__sequence" },
+            { "$ref": "#/$defs/type__string" }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string", "sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__round": {
+      "title": "round",
+      "description": "Round the number to a given precision.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "round" },
+        "node": { "$ref": "#/$defs/type__number" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "precision",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["number"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__safe": {
+      "title": "safe",
+      "description": "WARNING",
+      "type": "object",
+      "properties": {
+        "name": { "const": "safe" }
+      },
+      "_provider": "???"
+    },
+    "filter__slice": {
+      "title": "slice",
+      "description": "Slice an iterable and return a list of lists containing those items.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "slice" },
+        "node": { "$ref": "#/$defs/type__sequence" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "count",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            },
+            {
+              "title": "fill_with",
+              "description": "Fill missing values on the last iteration.",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__split": {
+      "title": "split",
+      "description": "Splits a string by the given delimiter and returns a list of strings.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "split" },
+        "node": {
+          "anyOf": [{ "$ref": "#/$defs/type__string" }]
+        },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "delimiter",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__t": {
+      "title": "t",
+      "description": "Return a translated string. This filter should be used for any interface strings manually placed in the template that will appear for users. Only constant value are accepted.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "t" },
+        "node": { "$ref": "#/$defs/constant__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "dilla"
+    },
+    "filter__title": {
+      "title": "title",
+      "description": "Converts a value to title case.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "title" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__trim": {
+      "title": "trim",
+      "description": "Trims a value",
+      "type": "object",
+      "properties": {
+        "name": { "const": "trim" },
+        "node": { "$ref": "#/$defs/type__string" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "chars",
+              "anyOf": [{ "$ref": "#/$defs/type__string" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "filter__upper": {
+      "title": "upper",
+      "description": "Converts a value to uppercase.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "trim" },
+        "node": { "$ref": "#/$defs/type__string" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "jinja"
+    },
+    "props_filters": {
+      "title": "Filters for props",
+      "description": "They are applied to values to modify them. For example the expression <code>42|filter(23)</code> invokes the filter filter with the arguments 42 and 23.  Using filters in templates is possible in all places an expression is permitted. This means they are not just used for printing but also are useful for iteration or similar situations.",
+      "type": "object",
+      "properties": {
+        "@node": { "const": "Filter" }
+      },
+      "anyOf": [
+        { "$ref": "#/$defs/filter__abs" },
+        { "$ref": "#/$defs/filter__append" },
+        { "$ref": "#/$defs/filter__batch" },
+        { "$ref": "#/$defs/filter__capitalize" },
+        { "$ref": "#/$defs/filter__clean_id" },
+        { "$ref": "#/$defs/filter__default" },
+        { "$ref": "#/$defs/filter__escape" },
+        { "$ref": "#/$defs/filter__first" },
+        { "$ref": "#/$defs/filter__items" },
+        { "$ref": "#/$defs/filter__join" },
+        { "$ref": "#/$defs/filter__last" },
+        { "$ref": "#/$defs/filter__length" },
+        { "$ref": "#/$defs/filter__lower" },
+        { "$ref": "#/$defs/filter__map" },
+        { "$ref": "#/$defs/filter__merge" },
+        { "$ref": "#/$defs/filter__prepend" },
+        { "$ref": "#/$defs/filter__replace" },
+        { "$ref": "#/$defs/filter__reverse" },
+        { "$ref": "#/$defs/filter__round" },
+        { "$ref": "#/$defs/filter__safe" },
+        { "$ref": "#/$defs/filter__slice" },
+        { "$ref": "#/$defs/filter__split" },
+        { "$ref": "#/$defs/filter__t" },
+        { "$ref": "#/$defs/filter__title" },
+        { "$ref": "#/$defs/filter__trim" },
+        { "$ref": "#/$defs/filter__upper" }
+      ]
+    },
+    "functions": {
+      "title": "Functions",
+      "description": "They can be called in any place where an expression is valid to generate data. Functions are not used a lot in Dilla, to keep the components self-contained.",
+      "type": "object",
+      "properties": {
+        "@node": { "const": "Call" }
+      },
+      "anyOf": [
+        { "$ref": "#/$defs/function__random" },
+        { "$ref": "#/$defs/function__range" }
+      ]
+    },
+    "function__random": {
+      "title": "random",
+      "description": "Generate a random string from a signed 32 bit number. Useful to build temporary unique ID.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "random" }
+      },
+      "_return": {
+        "types": ["string"]
+      },
+      "_provider": "dilla"
+    },
+    "function__range": {
+      "title": "range",
+      "description": "Return a list containing an arithmetic progression of integers. This function will refuse to create ranges over 10.000 items.",
+      "type": "object",
+      "properties": {
+        "name": { "const": "range" },
+        "args": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "title": "lower",
+              "description": "defaults to 0",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            },
+            {
+              "title": "upper",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            },
+            {
+              "title": "step",
+              "description": "Specifies the increment (or decrement).",
+              "anyOf": [{ "$ref": "#/$defs/type__number" }]
+            }
+          ]
+        }
+      },
+      "_return": {
+        "types": ["sequence"]
+      },
+      "_provider": "jinja"
+    },
+    "tests": {
+      "title": "Tests",
+      "description": "They are like filters but a different syntax is used to invoke them and they have to return boolean values. For instance the expression <code>if foo is odd</code> check if the value is indeed an odd number.",
+      "type": "object",
+      "properties": {
+        "@node": { "const": "Test" }
+      },
+      "anyOf": [
+        {
+          "title": "is_endingwith",
+          "description": "Checks if the value is ending with a string.",
+          "type": "object",
+          "properties": {
+            "name": { "const": "endingwith" },
+            "node": { "$ref": "#/$defs/type__string" },
+            "args": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "title": "other",
+                  "anyOf": [{ "$ref": "#/$defs/type__string" }]
+                }
+              ]
+            }
+          },
+          "_provider": "jinja"
+        },
+        {
+          "title": "is_even",
+          "description": "Checks if a value is even.",
+          "type": "object",
+          "properties": {
+            "name": { "const": "even" },
+            "node": { "$ref": "#/$defs/type__number" }
+          },
+          "_provider": "jinja"
+        },
+        {
+          "title": "is_mapping",
+          "description": "Checks if this value is a mapping.",
+          "type": "object",
+          "properties": {
+            "name": { "const": "mapping" },
+            "node": {
+              "anyOf": [
+                { "$ref": "#/$defs/type__string" },
+                { "$ref": "#/$defs/type__number" },
+                { "$ref": "#/$defs/type__boolean" },
+                { "$ref": "#/$defs/type__sequence" },
+                { "$ref": "#/$defs/type__mapping" }
+              ]
+            }
+          },
+          "_provider": "jinja"
+        },
+        {
+          "title": "is_odd",
+          "description": "Checks if a value is odd.",
+          "type": "object",
+          "properties": {
+            "name": { "const": "odd" },
+            "node": { "$ref": "#/$defs/type__number" }
+          },
+          "_provider": "jinja"
+        },
+        {
+          "title": "is_sequence",
+          "description": "Checks if this value is a sequence",
+          "type": "object",
+          "properties": {
+            "name": { "const": "sequence" },
+            "node": {
+              "anyOf": [
+                { "$ref": "#/$defs/type__string" },
+                { "$ref": "#/$defs/type__number" },
+                { "$ref": "#/$defs/type__boolean" },
+                { "$ref": "#/$defs/type__sequence" },
+                { "$ref": "#/$defs/type__mapping" }
+              ]
+            }
+          },
+          "_provider": "jinja"
+        },
+        {
+          "title": "is_startingwith",
+          "description": "Checks if the value is starting with a string.",
+          "type": "object",
+          "properties": {
+            "name": { "const": "startingwith" },
+            "node": { "$ref": "#/$defs/type__string" },
+            "args": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "title": "other",
+                  "anyOf": [{ "$ref": "#/$defs/type__string" }]
+                }
+              ]
+            }
+          },
+          "_provider": "jinja"
+        }
+      ]
+    }
+  },
+  "anyOf": [{ "$ref": "#/$defs/_any_node" }]
+}
