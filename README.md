@@ -1,5 +1,7 @@
 # Dilla Schemas
 
+Share your design systems in a tiny universal package. [https://dilla.io](https://dilla.io)
+
 ## definitions.schema.json
 
 ### A Web design system description format

@@ -8,10 +8,10 @@ test: build
 	@docker run -t -v $(ROOT_DIR)/$(DS)-master:/data/ validator templates
 
 run:
-	docker run -t -v $(ROOT_DIR)/$(DS)-master:/data/ validator run
+	- docker run -t -v $(ROOT_DIR)/$(DS)-master:/data/ validator run
 
 build:
-	 docker build -t validator --rm .
+	- docker build -t validator --rm .
 
 lint:
 	- prettier --write README.md

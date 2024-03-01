@@ -1,6 +1,11 @@
 variables:
-  NAME: 'schemas'
-  VERSION: '1.0'
+  PKG_NAME: 'schemas'
+  PKG_VERSION: '1.0.0'
+  DOCKER_HOST: tcp://docker:2375
+  RELEASE_REGISTRY: docker.io
+  RELEASE_IMAGE: index.docker.io/$RELEASE_USER
+  IMAGE_NAME: schemas
+  DOCKER_BUILDKIT: 1
 
 stages:
   - build
@@ -15,7 +20,8 @@ docker:
   services:
     - docker:dind
   before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    - docker --version
+    - echo "$RELEASE_PASSWORD" | docker login $RELEASE_REGISTRY --username $RELEASE_USER --password-stdin
   # Default branch leaves tag empty (= latest tag)
   # All other branches are tagged with the escaped branch name (commit ref slug)
   script:
@@ -27,8 +33,9 @@ docker:
         tag=":$CI_COMMIT_REF_SLUG"
         echo "Running on branch '$CI_COMMIT_BRANCH': tag = $tag"
       fi
-    - docker build --pull -t "$CI_REGISTRY_IMAGE${tag}" .
-    - docker push "$CI_REGISTRY_IMAGE${tag}"
+    - echo "Build and push $RELEASE_IMAGE/$IMAGE_NAME$tag"
+    - docker build --tag "$RELEASE_IMAGE/$IMAGE_NAME${tag}" .
+    - docker push "$RELEASE_IMAGE/$IMAGE_NAME${tag}"
   # Run this job in a branch where a Dockerfile exists
   rules:
     - if: $CI_COMMIT_BRANCH
@@ -46,11 +53,11 @@ package:
     - apk add curl
   script:
     - |
-      echo "${VERSION}" > version.txt
-      echo "${VERSION}" > version-${VERSION}.txt
-      echo "VERSION=${VERSION}" > version.env
-      tar -czf ${NAME}-${VERSION}.tar.gz *.schema.json
-      curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ${NAME}-${VERSION}.tar.gz ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${NAME}/${VERSION}/${NAME}.${VERSION}.tar.gz
+      echo "${PKG_VERSION}" > version.txt
+      echo "${PKG_VERSION}" > version-${PKG_VERSION}.txt
+      echo "VERSION=${PKG_VERSION}" > version.env
+      tar -czf ${PKG_NAME}-${PKG_VERSION}.tar.gz *.schema.json
+      curl --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file ${PKG_NAME}-${PKG_VERSION}.tar.gz ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PKG_NAME}/${PKG_VERSION}/${PKG_NAME}.${PKG_VERSION}.tar.gz
   artifacts:
     reports:
       # Propagates variables into the pipeline level, but never stores the actual file
@@ -59,3 +66,4 @@ package:
     - if: $CI_COMMIT_BRANCH
       changes:
         - "*.schema.json"
+  when: manual
